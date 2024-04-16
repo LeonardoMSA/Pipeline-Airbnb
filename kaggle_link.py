@@ -1,21 +1,22 @@
 class kaggle:
-  def downloadDataset(): 
-    import pandas as pd
-    from kaggle.api.kaggle_api_extended import KaggleApi
-    import os
-    
-    api = KaggleApi()
-    api.authenticate()
+    @staticmethod
+    def downloadDataset():
+        from kaggle.api.kaggle_api_extended import KaggleApi
+        import pandas as pd
+        import os
 
-    dataset_url = 'dgomonov/new-york-city-airbnb-open-data'
-    api.dataset_download_files(dataset_url, path='./kaggle', unzip=True)
+        api = KaggleApi()
+        api.authenticate()
 
-    if os.path.exists("kaggle/New_York_City_.png"):
-      os.remove("kaggle/New_York_City_.png")
+        dataset_url = 'dgomonov/new-york-city-airbnb-open-data'
+        api.dataset_download_files(dataset_url, path='./kaggle', unzip=True)
 
-    file_name = 'kaggle/AB_NYC_2019.csv'
+        if os.path.exists("kaggle/New_York_City.png"):
+            os.remove("kaggle\New_York_City_.png")
 
-    cols_to_use = ['id', 'name', 'host_id', 'neighbourhood', 'neighbourhood_group', 'latitude', 'longitude', 'room_type', 'price', 'minimum_nights', 'number_of_reviews', 'availability_365']
-    data = pd.read_csv(file_name, usecols=cols_to_use)
+        file_name = 'kaggle/AB_NYC_2019.csv'
+        data = pd.read_csv(file_name)
 
-    print(data.head())
+        print(data.head())
+        cols_to_use = pd.read_csv(file_name, nrows=0).columns.tolist()
+        return dataset_url.split('/')[-1], cols_to_use

@@ -5,13 +5,13 @@ class CheckEssentials:
         for lib in libraries:
             try:
                 __import__(lib)
-                print(f'Library {lib} already installed')
+                # print(f'Library {lib} already installed')
 
             except ImportError:
                 print(f"Library {lib} not found. Installing...")
                 import subprocess
                 subprocess.check_call(["pip", "install", lib])
-                print("Library installed successfully.")
+                # print("Library installed successfully.")
 
 
     def checkAPIJsonWin():

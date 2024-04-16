@@ -3,9 +3,6 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import pandas as pd
 import json
 
-
-
-=======
 class postDatabase:
     params = None
     

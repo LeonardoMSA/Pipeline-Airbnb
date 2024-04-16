@@ -12,7 +12,7 @@ class kaggle:
         # Download do dataset
         dataset_url = 'dgomonov/new-york-city-airbnb-open-data'
         api.dataset_download_files(dataset_url, path='./kaggle', unzip=True)
-
+        
         diretorio = "kaggle/"
         arquivos_png = [arquivo for arquivo in os.listdir(diretorio) if arquivo.endswith(".png")]
         for arquivo in arquivos_png:
@@ -26,6 +26,7 @@ class kaggle:
         elif len(arquivos_csv) > 1:
             raise ValueError("Múltiplos arquivos CSV encontrados no diretório. Não é possível determinar automaticamente o nome do arquivo.")
         file_name = os.path.join(diretorio, arquivos_csv[0])
+
 
         # Ler os dados do arquivo CSV
         data = pd.read_csv(file_name)

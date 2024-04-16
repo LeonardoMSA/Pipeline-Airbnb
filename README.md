@@ -2,4 +2,4 @@
 
 --- 
 
-Resumir trabalho aqui
+Usando OLAP, um fato usando ROLL UP, 

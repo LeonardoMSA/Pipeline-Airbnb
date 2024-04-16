@@ -1,6 +1,11 @@
 def main():
     import kaggle_link as kag
     import db as dbPost
+    import install as ins
+
+    # Instalar bibliotecas caso nao tenha
+    ins.CheckEssentials.installLibs()
+    ins.CheckEssentials.checkAPIJsonWin()
 
     # Baixar o dataset e obter o nome
     dataset_name, columns, file_name = kag.kaggle.downloadDataset()

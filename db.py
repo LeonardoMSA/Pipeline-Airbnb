@@ -4,6 +4,8 @@ import pandas as pd
 import json
 
 
+
+=======
 class postDatabase:
     params = None
     
@@ -24,6 +26,7 @@ class postDatabase:
         postDatabase.initialize()
         
         conn = psycopg2.connect(**postDatabase.params, dbname='postgres')
+
         conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 
         cursor = conn.cursor()

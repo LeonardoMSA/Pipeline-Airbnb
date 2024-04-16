@@ -1,21 +1,38 @@
+from kaggle.api.kaggle_api_extended import KaggleApi
+import pandas as pd
+import os
+
 class kaggle:
-  def downloadDataset(): 
-    import pandas as pd
-    from kaggle.api.kaggle_api_extended import KaggleApi
-    import os
-    
-    api = KaggleApi()
-    api.authenticate()
+    @staticmethod
+    def downloadDataset():
+        # Autenticar na API do Kaggle
+        api = KaggleApi()
+        api.authenticate()
 
-    dataset_url = 'dgomonov/new-york-city-airbnb-open-data'
-    api.dataset_download_files(dataset_url, path='./kaggle', unzip=True)
+        # Download do dataset
+        dataset_url = 'dgomonov/new-york-city-airbnb-open-data'
+        api.dataset_download_files(dataset_url, path='./kaggle', unzip=True)
 
-    if os.path.exists("kaggle/New_York_City_.png"):
-      os.remove("kaggle/New_York_City_.png")
+        diretorio = "kaggle/"
+        arquivos_png = [arquivo for arquivo in os.listdir(diretorio) if arquivo.endswith(".png")]
+        for arquivo in arquivos_png:
+            caminho_arquivo = os.path.join(diretorio, arquivo)
+            os.remove(caminho_arquivo)
 
-    file_name = 'kaggle/AB_NYC_2019.csv'
+        # Pegar o nome do arquivo .csv restante
+        arquivos_csv = [arquivo for arquivo in os.listdir(diretorio) if arquivo.endswith(".csv")]
+        if len(arquivos_csv) == 0:
+            raise FileNotFoundError("Nenhum arquivo CSV encontrado no diretório.")
+        elif len(arquivos_csv) > 1:
+            raise ValueError("Múltiplos arquivos CSV encontrados no diretório. Não é possível determinar automaticamente o nome do arquivo.")
+        file_name = os.path.join(diretorio, arquivos_csv[0])
 
-    cols_to_use = ['id', 'name', 'host_id', 'neighbourhood', 'neighbourhood_group', 'latitude', 'longitude', 'room_type', 'price', 'minimum_nights', 'number_of_reviews', 'availability_365']
-    data = pd.read_csv(file_name, usecols=cols_to_use)
+        # Ler os dados do arquivo CSV
+        data = pd.read_csv(file_name)
 
-    print(data.head())
+
+        print(data.head())
+        cols_to_use = pd.read_csv(file_name, nrows=0).columns.tolist()
+
+        return dataset_url.split('/')[-1], cols_to_use, file_name
+

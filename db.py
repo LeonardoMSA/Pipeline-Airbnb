@@ -11,9 +11,9 @@ class postDatabase:
             'password': '123'
         }
 
-        db_name = dataset_name
+        db_name = dataset_name # THIS DB NAME É O DO CREATE DATABASE
 
-        conn = psycopg2.connect(**params, dbname='postgres')
+        conn = psycopg2.connect(**params, dbname='postgres') # THIS ONE É DO NOME DO BANCO QUE TAMO USANDO (POSTGRES)
         conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 
         cursor = conn.cursor()

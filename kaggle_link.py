@@ -11,8 +11,8 @@ class kaggle:
         dataset_url = 'dgomonov/new-york-city-airbnb-open-data'
         api.dataset_download_files(dataset_url, path='./kaggle', unzip=True)
 
-        if os.path.exists("kaggle/New_York_City.png"):
-            os.remove("kaggle\New_York_City_.png")
+        if os.path.exists("kaggle/New_York_City_.png"):
+            os.remove("kaggle/New_York_City_.png")
 
         file_name = 'kaggle/AB_NYC_2019.csv'
         data = pd.read_csv(file_name)

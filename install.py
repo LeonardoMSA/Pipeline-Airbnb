@@ -10,7 +10,7 @@ class CheckEssentials:
             except ImportError:
                 print(f"Library {lib} not found. Installing...")
                 import subprocess
-                subprocess.check_call(["pip", "install", lib])
+                subprocess.check_call(["pip3", "install", lib])
                 # print("Library installed successfully.")
 
 

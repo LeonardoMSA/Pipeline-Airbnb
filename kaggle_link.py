@@ -35,5 +35,5 @@ class kaggle:
         print(data.head())
         cols_to_use = pd.read_csv(file_name, nrows=0).columns.tolist()
 
-        return dataset_url.split('/')[-1], cols_to_use, file_name
+        return dataset_url.split(',')[-1], cols_to_use, file_name
 

@@ -12,6 +12,11 @@ def main():
     # Criar o banco de dados com o nome do dataset e inserir os dados
     dbPost.postDatabase.createDatabase(dataset_name)
     dbPost.postDatabase.insertData(dataset_name, columns, file_name)
+    dbPost.postDatabase.createDimensionTables(dataset_name)  # Cria as tabelas de dimensão
+    dbPost.postDatabase.insertDataIntoDimensions(dataset_name, file_name)
+
+
+
 
 
 if __name__ == "__main__":

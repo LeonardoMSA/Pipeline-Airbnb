@@ -3,9 +3,6 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import pandas as pd
 import json
 
-
-
-=======
 class postDatabase:
     params = None
     
@@ -18,7 +15,8 @@ class postDatabase:
             cls.params = {
                 'host': config['host'],
                 'user': config['user'],
-                'password': config['password']
+                'password': config['password'],
+                'port': config['port'],
             }
 
     @staticmethod

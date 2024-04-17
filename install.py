@@ -5,13 +5,11 @@ class CheckEssentials:
         for lib in libraries:
             try:
                 __import__(lib)
-                # print(f'Library {lib} already installed')
 
             except ImportError:
                 print(f"Library {lib} not found. Installing...")
                 import subprocess
                 subprocess.check_call(["pip3", "install", lib])
-                # print("Library installed successfully.")
 
 
     def checkAPIJsonWin():
@@ -19,7 +17,6 @@ class CheckEssentials:
         import getpass
 
         username = getpass.getuser()
-        #print("Current user:", username)
 
         kaggle_json_path = 'C:\\Users\\' + username + '\\.kaggle\\kaggle.json'
         if not os.path.exists(kaggle_json_path):

@@ -84,7 +84,7 @@ class postDatabase:
             neighbourhood VARCHAR(255),
             latitude NUMERIC(9,6),
             longitude NUMERIC(9,6),
-            PRIMARY KEY (neighbourhood, latitude, longitude)
+            PRIMARY KEY (latitude, longitude)
         );
         CREATE TABLE IF NOT EXISTS dim_property (
             id INT PRIMARY KEY,
@@ -94,12 +94,11 @@ class postDatabase:
             availability_365 INT
         );
         CREATE TABLE IF NOT EXISTS dim_booking (
-            id INT,
+            id INT PRIMARY KEY,
             minimum_nights INT,
             number_of_reviews INT,
             last_review DATE,
-            reviews_per_month NUMERIC(5,2),
-            PRIMARY KEY (id, last_review)
+            reviews_per_month NUMERIC(5,2)
         );
         """)
         conn.commit()
@@ -115,21 +114,18 @@ class postDatabase:
 
         data = pd.read_csv(file_name)
         
-        # Inserção na tabela de Anfitriões
         hosts = data[['host_id', 'host_name', 'calculated_host_listings_count']].drop_duplicates().dropna()
         psycopg2.extras.execute_batch(cursor, """
         INSERT INTO dim_host (host_id, host_name, calculated_host_listings_count) VALUES (%s, %s, %s)
         ON CONFLICT (host_id) DO NOTHING;
         """, hosts.values.tolist())
 
-        # Inserção na tabela de Localização
         locations = data[['neighbourhood_group', 'neighbourhood', 'latitude', 'longitude']].drop_duplicates().dropna()
         psycopg2.extras.execute_batch(cursor, """
         INSERT INTO dim_location (neighbourhood_group, neighbourhood, latitude, longitude) VALUES (%s, %s, %s, %s)
-        ON CONFLICT (neighbourhood, latitude, longitude) DO NOTHING;
+        ON CONFLICT (latitude, longitude) DO NOTHING;
         """, locations.values.tolist())
 
-        # Inserção na tabela de Propriedades
         properties = data[['id', 'name', 'room_type', 'price', 'availability_365']].drop_duplicates().dropna()
         psycopg2.extras.execute_batch(cursor, """
         INSERT INTO dim_property (id, name, room_type, price, availability_365) VALUES (%s, %s, %s, %s, %s)
@@ -140,7 +136,7 @@ class postDatabase:
         bookings = data[['id', 'minimum_nights', 'number_of_reviews', 'last_review', 'reviews_per_month']].drop_duplicates().dropna()
         psycopg2.extras.execute_batch(cursor, """
         INSERT INTO dim_booking (id, minimum_nights, number_of_reviews, last_review, reviews_per_month) VALUES (%s, %s, %s, %s, %s)
-        ON CONFLICT (id, last_review) DO NOTHING;
+        ON CONFLICT (id) DO NOTHING;
         """, bookings.values.tolist())
 
         conn.commit()

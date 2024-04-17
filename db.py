@@ -75,31 +75,32 @@ class postDatabase:
         # Criação de tabelas de dimensão
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS dim_host (
-            host_id INT PRIMARY KEY,
+            host_id_pk SERIAL PRIMARY KEY,
+            host_id INT,
             host_name VARCHAR(255),
             calculated_host_listings_count INT
         );
         CREATE TABLE IF NOT EXISTS dim_location (
+            location_id SERIAL PRIMARY KEY,
             neighbourhood_group VARCHAR(255),
             neighbourhood VARCHAR(255),
             latitude NUMERIC(9,6),
             longitude NUMERIC(9,6),
-            PRIMARY KEY (neighbourhood, latitude, longitude)
+            UNIQUE(latitude, longitude)
         );
         CREATE TABLE IF NOT EXISTS dim_property (
-            id INT PRIMARY KEY,
+            property_id SERIAL PRIMARY KEY,
             name TEXT,
             room_type VARCHAR(255),
             price INT,
             availability_365 INT
         );
         CREATE TABLE IF NOT EXISTS dim_booking (
-            id INT,
+            booking_id SERIAL PRIMARY KEY,
             minimum_nights INT,
             number_of_reviews INT,
             last_review DATE,
-            reviews_per_month NUMERIC(5,2),
-            PRIMARY KEY (id, last_review)
+            reviews_per_month NUMERIC(5,2)
         );
         """)
         conn.commit()
@@ -119,31 +120,114 @@ class postDatabase:
         hosts = data[['host_id', 'host_name', 'calculated_host_listings_count']].drop_duplicates().dropna()
         psycopg2.extras.execute_batch(cursor, """
         INSERT INTO dim_host (host_id, host_name, calculated_host_listings_count) VALUES (%s, %s, %s)
-        ON CONFLICT (host_id) DO NOTHING;
+        ON CONFLICT (host_id_pk) DO NOTHING;
         """, hosts.values.tolist())
 
         # Inserção na tabela de Localização
         locations = data[['neighbourhood_group', 'neighbourhood', 'latitude', 'longitude']].drop_duplicates().dropna()
         psycopg2.extras.execute_batch(cursor, """
         INSERT INTO dim_location (neighbourhood_group, neighbourhood, latitude, longitude) VALUES (%s, %s, %s, %s)
-        ON CONFLICT (neighbourhood, latitude, longitude) DO NOTHING;
+        ON CONFLICT (location_id) DO NOTHING;
         """, locations.values.tolist())
 
         # Inserção na tabela de Propriedades
-        properties = data[['id', 'name', 'room_type', 'price', 'availability_365']].drop_duplicates().dropna()
+        properties = data[['name', 'room_type', 'price', 'availability_365']].drop_duplicates().dropna()
         psycopg2.extras.execute_batch(cursor, """
-        INSERT INTO dim_property (id, name, room_type, price, availability_365) VALUES (%s, %s, %s, %s, %s)
-        ON CONFLICT (id) DO NOTHING;
+        INSERT INTO dim_property (name, room_type, price, availability_365) VALUES (%s, %s, %s, %s)
+        ON CONFLICT (property_id) DO NOTHING;
         """, properties.values.tolist())
 
         # Inserção na tabela de Reservas
-        bookings = data[['id', 'minimum_nights', 'number_of_reviews', 'last_review', 'reviews_per_month']].drop_duplicates().dropna()
+        bookings = data[['minimum_nights', 'number_of_reviews', 'last_review', 'reviews_per_month']].drop_duplicates().dropna()
         psycopg2.extras.execute_batch(cursor, """
-        INSERT INTO dim_booking (id, minimum_nights, number_of_reviews, last_review, reviews_per_month) VALUES (%s, %s, %s, %s, %s)
-        ON CONFLICT (id, last_review) DO NOTHING;
+        INSERT INTO dim_booking (minimum_nights, number_of_reviews, last_review, reviews_per_month) VALUES (%s, %s, %s, %s)
+        ON CONFLICT (booking_id) DO NOTHING;
         """, bookings.values.tolist())
 
         conn.commit()
         cursor.close()
         conn.close()
         print("Dados inseridos nas tabelas de dimensão com sucesso.")
+
+    @staticmethod
+    def createFactTables(dataset_name):
+        postDatabase.initialize()
+        conn = psycopg2.connect(**postDatabase.params, dbname=dataset_name)
+        cursor = conn.cursor()
+
+        # Criação da tabela de fatos para Performance de Listagem
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS fact_finance_performance (
+            fact_listing_id SERIAL PRIMARY KEY,
+            property_id INT,
+            host_id INT,
+            location_id INT,
+            booking_id INT,
+            average_price_neighboorhood_roomtype FLOAT,
+            FOREIGN KEY (property_id) REFERENCES dim_property(property_id),
+            FOREIGN KEY (host_id) REFERENCES dim_host(host_id_pk),
+            FOREIGN KEY (location_id) REFERENCES dim_location(location_id),
+            FOREIGN KEY (booking_id) REFERENCES dim_booking(booking_id)
+        );
+        """)
+
+        # Criação da tabela de fatos para Satisfação do Cliente
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS fact_host_performance (
+            fact_customer_id SERIAL PRIMARY KEY,
+            property_id INT,
+            host_id INT,
+            location_id INT,
+            booking_id INT,
+            avrg_price_host_neighborhood FLOAT,
+            FOREIGN KEY (property_id) REFERENCES dim_property(property_id),
+            FOREIGN KEY (host_id) REFERENCES dim_host(host_id_pk),
+            FOREIGN KEY (location_id) REFERENCES dim_location(location_id),
+            FOREIGN KEY (booking_id) REFERENCES dim_booking(booking_id)
+        );
+        """)
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("Tabelas de fatos criadas com sucesso.")
+
+    @staticmethod
+    def insertFinancePerformanceFacts(dataset_name):
+        postDatabase.initialize()
+        conn = psycopg2.connect(**postDatabase.params, dbname=dataset_name)
+        cursor = conn.cursor()
+
+        # Calcular média de preço por bairro e tipo de quarto
+        cursor.execute("""
+        INSERT INTO fact_finance_performance (property_id, host_id, location_id, booking_id, average_price_neighborhood_roomtype)
+        SELECT p.property_id, p.host_id, l.location_id, b.booking_id, AVG(p.price)
+        FROM dim_property p
+        JOIN dim_location l ON p.property_id = l.property_id
+        JOIN dim_booking b ON p.property_id = b.property_id
+        GROUP BY l.neighbourhood_group, p.room_type, p.property_id, p.host_id, l.location_id, b.booking_id;
+        """)
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("Dados de performance financeira inseridos com sucesso.")
+
+    @staticmethod
+    def insertHostPerformanceFacts(dataset_name):
+        postDatabase.initialize()
+        conn = psycopg2.connect(**postDatabase.params, dbname=dataset_name)
+        cursor = conn.cursor()
+
+        # Calcular a média do preço das listagens de um anfitrião por bairro
+        cursor.execute("""
+        INSERT INTO fact_host_performance (property_id, host_id, location_id, booking_id, avrg_price_host_neighborhood)
+        SELECT p.property_id, h.host_id, l.location_id, b.booking_id, AVG(p.price)
+        FROM dim_property p
+        JOIN dim_host h ON p.host_id = h.host_id
+        JOIN dim_location l ON p.location_id = l.location_id
+        JOIN dim_booking b ON p.booking_id = b.booking_id
+        GROUP BY h.host_id, l.neighbourhood_group, p.property_id, l.location_id, b.booking_id;
+        """)
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("Dados de performance do anfitrião inseridos com sucesso.")

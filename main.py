@@ -12,13 +12,14 @@ def main():
     dataset_name = "paivaDB"
 
     # Criar o banco de dados com o nome do dataset e inserir os dados
-    # dbPost.postDatabase.createDatabase(dataset_name)
-    # dbPost.postDatabase.insertData(dataset_name, columns, file_name)
-    # dbPost.postDatabase.createDimensionTables(dataset_name)  # Cria as tabelas de dimensão
-    # dbPost.postDatabase.insertDataIntoDimensions(dataset_name, file_name)
+    dbPost.postDatabase.createDatabase(dataset_name)
+    dbPost.postDatabase.insertData(dataset_name, columns, file_name)
+    dbPost.postDatabase.createDimensionTables(dataset_name)  # Cria as tabelas de dimensão
+    dbPost.postDatabase.insertDataIntoDimensions(dataset_name, file_name)
     # dbPost.postDatabase.createFactTables(dataset_name)
+    # dbPost.postDatabase.populateFactTables(dataset_name)
     # dbPost.postDatabase.insertHostPerformanceFacts(dataset_name)
-    dbPost.postDatabase.insertFinancePerformanceFacts(dataset_name)
+    # dbPost.postDatabase.insertFinancePerformanceFacts(dataset_name)
 
 
 

@@ -191,43 +191,73 @@ class postDatabase:
         conn.close()
         print("Tabelas de fatos criadas com sucesso.")
 
+    # @staticmethod
+    # def insertFinancePerformanceFacts(dataset_name):
+    #     postDatabase.initialize()
+    #     conn = psycopg2.connect(**postDatabase.params, dbname=dataset_name)
+    #     cursor = conn.cursor()
+
+    #     cursor.execute("""
+    #     INSERT INTO fact_finance_performance (property_id, location_id, booking_id, average_price_neighborhood_roomtype)
+    #     SELECT p.property_id, l.location_id, b.booking_id, AVG(p.price)
+    #     FROM dim_property p
+    #     JOIN dim_location l ON p.property_id = l.location_id
+    #     JOIN dim_booking b ON p.property_id = b.property_id
+    #     GROUP BY p.property_id, l.location_id, b.booking_id;
+    #     """)
+    #     conn.commit()
+    #     cursor.close()
+    #     conn.close()
+    #     print("Dados de performance financeira inseridos com sucesso.")
+
+    # @staticmethod
+    # def insertHostPerformanceFacts(dataset_name):
+    #     postDatabase.initialize()
+    #     conn = psycopg2.connect(**postDatabase.params, dbname=dataset_name)
+    #     cursor = conn.cursor()
+
+    #     # Calcular a média do preço das listagens de um anfitrião por bairro
+    #     cursor.execute("""
+    #     INSERT INTO fact_host_performance (property_id, location_id, booking_id, avrg_price_host_neighborhood)
+    #     SELECT p.property_id, l.location_id, b.booking_id, AVG(p.price)
+    #     FROM dim_property p
+    #     JOIN dim_location l ON l.location_id = l.location_id
+    #     JOIN dim_booking b ON p.property_id = b.booking_id
+    #     GROUP BY p.property_id, l.location_id, b.booking_id;
+    #     """)
+    #     conn.commit()
+    #     cursor.close()
+    #     conn.close()
+    #     print("Dados de performance do anfitrião inseridos com sucesso.")
+
+
     @staticmethod
-    def insertFinancePerformanceFacts(dataset_name):
+    def populateFactTables(dataset_name):
         postDatabase.initialize()
         conn = psycopg2.connect(**postDatabase.params, dbname=dataset_name)
         cursor = conn.cursor()
 
-        # Calcular média de preço por bairro e tipo de quarto
+        # Inserir dados na tabela fact_finance_performance
         cursor.execute("""
-        INSERT INTO fact_finance_performance (property_id, host_id, location_id, booking_id, average_price_neighborhood_roomtype)
-        SELECT p.property_id, p.host_id, l.location_id, b.booking_id, AVG(p.price)
+        INSERT INTO fact_finance_performance (property_id, host_id, location_id, booking_id)
+        SELECT p.property_id, h.host_id, l.location_id, b.booking_id
         FROM dim_property p
-        JOIN dim_location l ON p.property_id = l.property_id
-        JOIN dim_booking b ON p.property_id = b.property_id
-        GROUP BY l.neighbourhood_group, p.room_type, p.property_id, p.host_id, l.location_id, b.booking_id;
+        CROSS JOIN dim_host h
+        CROSS JOIN dim_location l
+        CROSS JOIN dim_booking b;
         """)
+        
+        # Inserir dados na tabela fact_host_performance
+        cursor.execute("""
+        INSERT INTO fact_host_performance (property_id, host_id, location_id, booking_id)
+        SELECT p.property_id, h.host_id, l.location_id, b.booking_id
+        FROM dim_property p
+        CROSS JOIN dim_host h
+        CROSS JOIN dim_location l
+        CROSS JOIN dim_booking b;
+        """)
+
         conn.commit()
         cursor.close()
         conn.close()
-        print("Dados de performance financeira inseridos com sucesso.")
-
-    @staticmethod
-    def insertHostPerformanceFacts(dataset_name):
-        postDatabase.initialize()
-        conn = psycopg2.connect(**postDatabase.params, dbname=dataset_name)
-        cursor = conn.cursor()
-
-        # Calcular a média do preço das listagens de um anfitrião por bairro
-        cursor.execute("""
-        INSERT INTO fact_host_performance (property_id, host_id, location_id, booking_id, avrg_price_host_neighborhood)
-        SELECT p.property_id, h.host_id, l.location_id, b.booking_id, AVG(p.price)
-        FROM dim_property p
-        JOIN dim_host h ON p.host_id = h.host_id
-        JOIN dim_location l ON p.location_id = l.location_id
-        JOIN dim_booking b ON p.booking_id = b.booking_id
-        GROUP BY h.host_id, l.neighbourhood_group, p.property_id, l.location_id, b.booking_id;
-        """)
-        conn.commit()
-        cursor.close()
-        conn.close()
-        print("Dados de performance do anfitrião inseridos com sucesso.")
+        print("Tabelas de fatos populadas com sucesso.")
